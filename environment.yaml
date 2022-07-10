@@ -1,0 +1,12 @@
+name: coles-ds
+channels:
+  - conda-forge
+dependencies:
+  - python=3.9
+  - bokeh
+  - scikit-learn
+  - statsmodels
+  - spyder>=5.0.0
+  - matplotlib
+  - networkx
+  - pyomo
