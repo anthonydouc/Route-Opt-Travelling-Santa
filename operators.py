@@ -18,7 +18,11 @@ def shit_rng2(low, high, excludes):
 
 
 def shit_rng(low, high, r1, diff, n):
-        
+    
+    # generates random integers in the domain [low, high],
+    # exluding x in the range [r1 - diff, r1 + diff]
+    # np.random.choice is not used due to extremely slow speed.
+    
     r2a = np.maximum(low, np.random.randint(low - diff - 1, r1 - diff, n))
 
     r2b = np.minimum(high - 1, np.random.randint(r1 + diff, high + diff + 1, n))
@@ -29,6 +33,99 @@ def shit_rng(low, high, r1, diff, n):
     
     return r
 
+
+def get_three_segs_rand(tour, niter: int):
+    
+    n = len(tour)
+    
+    # seg = ((i, j, k)
+    #        for i in range(1, n - 1)
+    #        for j in range(i + 2, n - 1)
+    #        for k in range(j + 2, n - 1))
+    
+    ri = np.random.randint(1, n - 1 - 2 - 2 - 1, niter)
+    
+    rj = ri + 2
+    
+    rk = rj + 2
+    
+    #rj = np.random.randint(ri + 2, n - 1 - 2 - 1, niter)
+        
+    #rk = np.random.randint(rj + 2, n - 2, niter)
+    
+    return list(zip(ri, rj, rk))
+
+def three_opt(tour, dist, seg=None):
+
+    n = len(tour)
+    
+    if seg is None:
+        seg = ((i, j, k)
+               for i in range(1, n - 1)
+               for j in range(i + 2, n - 1)
+               for k in range(j + 2, n - 1))
+    
+
+    for i,j,k in seg:
+
+        move = check_distances(tour, dist, i, j, k)
+
+        if move is not None:
+          #  print('!!! improvement')
+            b = calc_dist(tour, dist)
+
+            tour = make_3opt(tour, move, i, j, k)
+
+            a = calc_dist(tour, dist)
+            if a > b:
+                print(' you fucking idiot', a - b)
+    return tour
+
+def make_3opt(tour, move, i, j, k):
+    # https://isd.ktu.lt/it2011/material/Proceedings/1_AI_5.pdf
+    # unique 3- opt alternatives:
+    # 1. AB -> AD, CD -> CF, EF -> EB: (a, d), (c, f), (e, b) [3-opt]
+    # 2. AB -> AC, CD -> DF, EF -> BE: (a, c), (b, e), (d, f) [3-opt]
+    # 3. AB -> AD, CD -> CE, EF -> BF: (a, d), (c, e), (b,f) [3-opt]
+    # 4. AB -> AE, CD -> DB, EF -> CF: (a, e), (c, f), (d, b) [3-opt]
+
+    # 5. AB -> AC, CD -> CB (reverse BC) : (a, c), (b, d), (e, f) [2-opt]
+    # 6. CD -> CE, DE -> DF (reverse DE): (a, b), (c, e), (d, f) [2-opt]
+    # 7. AB -> AE, EF -> FB (reverse BCDE): (a, e), (c, d), (b, f) [2-opt]
+
+    if move == 1:
+        tour[i+1:k+1] = tour[k-1:k+1] + tour[j-1:j+1] # swap BC with DE
+    elif move == 2:
+        tour[i+1:k+1] = tour[j:i:-1] + tour[k:j:-1] # reverse BC & DE
+    elif move == 3:
+        tour[i+1:k+1] = tour[j+1:k+1] + tour[j:i:-1] 
+    elif move == 4:
+        tour[i+1:k+1] = tour[k:j:-1] + tour[i+1:j+1] # swap BC with ED
+
+    return tour
+
+def check_distances(tour, dist, i, j, k):
+
+    a, b, c, d, e, f = tour[i], tour[i+1], tour[j], tour[j+1], tour[k], tour[k+1]
+
+    d0 = dist[a, b] + dist[c, d] + dist[e, f]
+
+    d1 = dist[a, d] + dist[c, f] + dist[e, b]
+
+    d2 = dist[a, c] + dist[b, e] + dist[d, f]
+
+    d3 = dist[a, d] + dist[c, e] + dist[b, f]
+
+    d4 = dist[a, e] + dist[c, f] + dist[d, b]
+
+    diffs = [d1 - d0, d2 - d0, d3 - d0, d4 - d0]
+
+    mindiff = min(diffs)
+
+    if mindiff < 0:
+        return diffs.index(mindiff) + 1
+    else:
+        return None
 
 def calc_dist(tour, d):
     return sum(d[tour[i], tour[i+1]] for i in range(0, len(tour) - 1))
@@ -120,20 +217,19 @@ def two_opt(tour, d, n_id1, n_id2):
     
     e1, e2 = gen_edges_2opt(tour, n_id1, n_id2)
         
-    c1 = (e1[0], e2[0])
+    ne1 = (e1[0], e2[0])
 
-    c2 = (e1[1], e2[1])
+    ne2 = (e1[1], e2[1])
 
-    old = d[e1] + d[e2]
-
-    diff = (d[c1] + d[c2]) - old
+    diff = (d[ne1] + d[ne2]) - (d[e1] + d[e2])
     
     if diff < 0:
         tour = make_2opt(tour, e1, e2)
 
     return tour
 
-
+# TODO: speedups via vectorised indexing?
+ 
 def local_search(tour, X, Y, niter: int=5):
 
     tour = list(tour)
@@ -145,7 +241,7 @@ def local_search(tour, X, Y, niter: int=5):
     # start and end nodes cannot be moved
     #candidates = list(range(1, n - 1))
     
-    # random numbers for relocate
+    # random numbers for relocate.
     t_id_arr = np.random.randint(1, n - 1, niter)
     
     r_id_arr = shit_rng(1, n - 1, t_id_arr, 1, niter)
@@ -154,32 +250,31 @@ def local_search(tour, X, Y, niter: int=5):
     n_id1_arr = np.random.randint(1, n - 2, niter)
     
     n_id2_arr = shit_rng(1, n - 2, n_id1_arr, 2, niter)
+    
+    segs = get_three_segs_rand(tour, niter)
+       
+   # seg_ids = np.random.randint(0, len(segs), niter)
 
     for i in range(0, niter):
-        t_id = t_id_arr[i]
-        
-        r_id = r_id_arr[i]
+        t_id, r_id = t_id_arr[i], r_id_arr[i]
+                        
+        n_id1, n_id2 = n_id1_arr[i], n_id2_arr[i]
                 
-        n_id1 = n_id1_arr[i]
-        
-        n_id2 = n_id2_arr[i]
-        
-        # relocate can generate unique solutions other ops cannot.
         tour = relocate(tour, t_id, r_id, d)
         
         tour = two_opt(tour, d, n_id1, n_id2)
         
-        # if there is time, add 3 opt.
-
+        tour = three_opt(tour, d, [segs[i]])
+                
     tour = np.array(tour)
     return tour
 
 if __name__ == '__main__':
-    nodes = [0, 1, 2, 3, 4, 5, 6]
+    nodes = [0, 1, 2, 3, 4, 5, 6, 7]
 
-    X = [1, 4, 2, 6, 8, 22, 0]
+    X = [1, 4, 2, 6, 8, 22, 0, 22]
 
-    Y = [100, 50, 20, 200, 300, 30, 500]
+    Y = [100, 50, 20, 200, 300, 30, 500, 6]
 
     n = len(nodes)
 
@@ -191,4 +286,4 @@ if __name__ == '__main__':
 
     ncheck = 5
     
-    tour = local_search(tour, X, Y, 50000)
+    tour = local_search(tour, X, Y, 1)

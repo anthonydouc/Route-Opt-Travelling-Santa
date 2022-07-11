@@ -181,10 +181,11 @@ def opt_cluster(cities, cluster_endpoints, cluster_edges, cluster: int):
         
     path, edges = nearest_neighbour(node_ids, X, Y, n_start_id, n_end_id)
 
-    #print(path)
+    print('p')
     
     path = local_search(path, X, Y, 1000000)
-
+    
+    print('g')
     # path, edges = get_path_mtz(node_ids,
     #                             X,
     #                             Y,
