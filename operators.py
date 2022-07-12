@@ -4,82 +4,34 @@ import numpy as np
 from data import calc_euclidean_dist
 
 
-def shit_rng2(low, high, excludes):
-    
-    r2 = -1
-
-    while r2 == -1:
-        rt = np.random.randint(low, high)
-            
-        if rt not in excludes:
-            r2 = rt
-        
-    return r2
+def calc_dist(tour, d):
+    return sum(d[tour[i], tour[i+1]] for i in range(0, len(tour) - 1))
 
 
-def shit_rng(low, high, r1, diff, n):
-    
-    # generates random integers in the domain [low, high],
-    # exluding x in the range [r1 - diff, r1 + diff]
-    # np.random.choice is not used due to extremely slow speed.
-    
-    r2a = np.maximum(low, np.random.randint(low - diff - 1, r1 - diff, n))
-
-    r2b = np.minimum(high - 1, np.random.randint(r1 + diff, high + diff + 1, n))
-
-    ri = np.random.randint(0, 1, n)
-
-    r = r2a * (ri) - r2b * (ri-1)
-    
-    return r
-
-
-def get_three_segs_rand(tour, niter: int):
+def get_three_segs_rand(tour: list, niter: int):
     
     n = len(tour)
-    
-    # seg = ((i, j, k)
-    #        for i in range(1, n - 1)
-    #        for j in range(i + 2, n - 1)
-    #        for k in range(j + 2, n - 1))
-    
-    ri = np.random.randint(1, n - 1 - 2 - 2 - 1, niter)
-    
-    rj = ri + 2
-    
-    rk = rj + 2
-    
-    #rj = np.random.randint(ri + 2, n - 1 - 2 - 1, niter)
+
+    ri = np.random.randint(1, n - 1 - 2 - 2, niter)
+
+    rj = np.random.randint(ri + 2, n - 1 - 2, niter)
         
-    #rk = np.random.randint(rj + 2, n - 2, niter)
-    
+    rk = np.random.randint(rj + 2, n - 1, niter)
+
     return list(zip(ri, rj, rk))
 
-def three_opt(tour, dist, seg=None):
 
-    n = len(tour)
+def three_opt(tour, dist, seg):
     
-    if seg is None:
-        seg = ((i, j, k)
-               for i in range(1, n - 1)
-               for j in range(i + 2, n - 1)
-               for k in range(j + 2, n - 1))
-    
-
     for i,j,k in seg:
 
         move = check_distances(tour, dist, i, j, k)
 
         if move is not None:
-          #  print('!!! improvement')
-            b = calc_dist(tour, dist)
-
             tour = make_3opt(tour, move, i, j, k)
-
-            a = calc_dist(tour, dist)
-            if a > b:
-                print(' you fucking idiot', a - b)
+            
     return tour
+
 
 def make_3opt(tour, move, i, j, k):
     # https://isd.ktu.lt/it2011/material/Proceedings/1_AI_5.pdf
@@ -94,7 +46,7 @@ def make_3opt(tour, move, i, j, k):
     # 7. AB -> AE, EF -> FB (reverse BCDE): (a, e), (c, d), (b, f) [2-opt]
 
     if move == 1:
-        tour[i+1:k+1] = tour[k-1:k+1] + tour[j-1:j+1] # swap BC with DE
+        tour[i+1:k+1] = tour[j+1:k+1] + tour[i+1:j+1] # swap BC with DE
     elif move == 2:
         tour[i+1:k+1] = tour[j:i:-1] + tour[k:j:-1] # reverse BC & DE
     elif move == 3:
@@ -103,6 +55,7 @@ def make_3opt(tour, move, i, j, k):
         tour[i+1:k+1] = tour[k:j:-1] + tour[i+1:j+1] # swap BC with ED
 
     return tour
+
 
 def check_distances(tour, dist, i, j, k):
 
@@ -121,15 +74,11 @@ def check_distances(tour, dist, i, j, k):
     diffs = [d1 - d0, d2 - d0, d3 - d0, d4 - d0]
 
     mindiff = min(diffs)
-
+    
     if mindiff < 0:
         return diffs.index(mindiff) + 1
     else:
         return None
-
-def calc_dist(tour, d):
-    return sum(d[tour[i], tour[i+1]] for i in range(0, len(tour) - 1))
-
 
 def calc_relocate_change(tour, d, t_id, r_id):
     # calculate the change in distance from a replacement move
@@ -170,12 +119,12 @@ def calc_relocate_change(tour, d, t_id, r_id):
 def relocate_node(tour, t_id, r_id):
 
     if t_id > r_id:
-        r_id += 1
-        
+      r_id += 1
+     
     removed = tour.pop(t_id)
-
+    
     tour.insert(r_id, removed)
-
+    
     return tour
 
 
@@ -225,10 +174,8 @@ def two_opt(tour, d, n_id1, n_id2):
     
     if diff < 0:
         tour = make_2opt(tour, e1, e2)
-
     return tour
 
-# TODO: speedups via vectorised indexing?
  
 def local_search(tour, X, Y, niter: int=5):
 
@@ -238,23 +185,18 @@ def local_search(tour, X, Y, niter: int=5):
 
     d = calc_euclidean_dist(X, Y)
 
-    # start and end nodes cannot be moved
-    #candidates = list(range(1, n - 1))
-    
     # random numbers for relocate.
-    t_id_arr = np.random.randint(1, n - 1, niter)
-    
-    r_id_arr = shit_rng(1, n - 1, t_id_arr, 1, niter)
-    
+    t_id_arr = np.random.randint(1, n - 2, niter)
+        
+    r_id_arr = np.random.randint(t_id_arr + 1, n - 1, niter)
+        
     # random numbers for two_opt
-    n_id1_arr = np.random.randint(1, n - 2, niter)
+    n_id1_arr = np.random.randint(1, n - 2 - 2, niter)
     
-    n_id2_arr = shit_rng(1, n - 2, n_id1_arr, 2, niter)
+    n_id2_arr = np.random.randint(n_id1_arr + 2, n - 2, niter)
     
     segs = get_three_segs_rand(tour, niter)
        
-   # seg_ids = np.random.randint(0, len(segs), niter)
-
     for i in range(0, niter):
         t_id, r_id = t_id_arr[i], r_id_arr[i]
                         
@@ -265,18 +207,18 @@ def local_search(tour, X, Y, niter: int=5):
         tour = two_opt(tour, d, n_id1, n_id2)
         
         tour = three_opt(tour, d, [segs[i]])
-                
+
     tour = np.array(tour)
     return tour
 
 if __name__ == '__main__':
-    nodes = [0, 1, 2, 3, 4, 5, 6, 7]
+    n = 100
+    
+    nodes = list(range(0, n))
 
-    X = [1, 4, 2, 6, 8, 22, 0, 22]
+    X = np.random.randint(1, 50, n)
 
-    Y = [100, 50, 20, 200, 300, 30, 500, 6]
-
-    n = len(nodes)
+    Y = np.random.randint(20, 500, n)
 
     d = calc_euclidean_dist(X, Y)
 
@@ -286,4 +228,4 @@ if __name__ == '__main__':
 
     ncheck = 5
     
-    tour = local_search(tour, X, Y, 1)
+    tour = local_search(tour, X, Y, 100000)

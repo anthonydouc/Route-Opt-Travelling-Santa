@@ -2,56 +2,20 @@
 import math
 import numpy as np
 import pandas as pd
-import networkx as nx
 
-from lpalgorithms import get_path_mtz
+from operators import local_search
+
 from scipy.spatial import KDTree
 
 from data import calc_euclidean_dist
 
-# Cost calculation func.
-
-# 1. Need a path construction algorithm.
-
-# 2. Then a local optimisation algorithm.
-
-# 3. Then potentially a grand optimnisation alogrithm.
-
-# Explore arbitary rules...  e.g. alpha % of all 10th steps come from a prime.
-
-# Or variant of 2-opts etc... but we look at fixing prime paths.
 
 # e.g step 9 could be a prime, but we would want this to be non prime,
 # and make step 10 a prime if swapping is better (10% better + random change due to different path).
 
 
-# should we use network objects? or just native python objects....
-# currently just network for convience graphing
-
-
-def calc_path_distance(edges, pX, pY):
-    # math.sqrt is faster than ** 0.5.
-    # x * x can be faster than ** 2.
-    distances = []
-
-    for (n1, n2) in edges:
-        x = pX[n2] - pX[n1]
-        y = pY[n2] - pY[n1]
-        distances.append( math.sqrt(x * x +  y * y ) )
-
-    # check every 10th edge. If source node is prime, no penalty.
-
-    return distances
-
-
-def nearest_index(G, n):
-    path = list(range(0, n)) + [0]
-
-    edges = [(path[i-1], path[i]) for i in range(1, len(path))]
-
-    G.add_edges_from(edges)
-
-    return G, path, edges
+def get_edges_from_path(path):
+    return [(path[i], path[i+1]) for i in range(0, len(path) - 1)]
 
 
 def nearest_neighbour(nodes, X, Y, start: int=None, end: int=None):
@@ -71,8 +35,6 @@ def nearest_neighbour(nodes, X, Y, start: int=None, end: int=None):
         ns = n -1
 
     path = np.array([start], dtype=int)
-
-    edges = []
 
     steps = range(0, ns)
 
@@ -94,18 +56,43 @@ def nearest_neighbour(nodes, X, Y, start: int=None, end: int=None):
 
                 path = np.append(path, v)
 
-    edges = [(path[i], path[i+1]) for i in range(0, ns)]
+    edges = get_edges_from_path(path)
 
     return path, edges
 
-# shifts visits of prime cities to the 10th step
-# and retains this if the new tour is an improvement
-def prime_shift():
-    pass
+
+def find_opt_path(nodes: list, X:np.array, Y: np.array, start: int,
+                  end: int, niter: int=1000) ->  (list, list):
+    '''
+    Finds the shortest possible path based on local optimisation of
+    an initial starting path.
+    '''
+
+    path, edges = nearest_neighbour(nodes, X, Y, start, end)
+    
+    path = local_search(path, X, Y, niter)
+    
+    edges = get_edges_from_path(path)
+    
+    return path, edges
 
 
 
-def get_endpoints(cities, cluster_edges):
+def run_course_opt(cities: pd.DataFrame, centers: pd.DataFrame,
+                   niter: int=1000):
+
+    nodes = centers.index.values
+    
+    X, Y = centers['X'], centers['Y']
+    
+    path, edges = find_opt_path(nodes, X, Y, 0, 0, niter)
+
+    cluster_endpoints = get_endpoints(cities, edges)
+    
+    return path, edges, cluster_endpoints  
+
+
+def get_endpoints(cities: pd.DataFrame, cluster_edges: pd.DataFrame):
     ''' Determines nodes connecting each cluster based on the shortest edge
         that can be constructed between each cluster.
         Shortest edge is found by a nearest neighbour search between
@@ -149,7 +136,8 @@ def get_endpoints(cities, cluster_edges):
 
     return path_nodes
 
-from operators import local_search
+  
+
 
 def opt_cluster(cities, cluster_endpoints, cluster_edges, cluster: int):
 
@@ -167,8 +155,6 @@ def opt_cluster(cities, cluster_endpoints, cluster_edges, cluster: int):
 
     n_end = cluster_endpoints[cl_end][0]
 
-    #nodes_rest = nodes_c.loc[~nodes_c['CityId'].isin([n_start, n_end]), 'CityId'].values
-
     X, Y = nodes_c['X'].values, nodes_c['Y'].values
 
     nodes = nodes_c['CityId'].values
@@ -178,21 +164,20 @@ def opt_cluster(cities, cluster_endpoints, cluster_edges, cluster: int):
     n_start_id = np.where(nodes==n_start)[0][0]
     
     n_end_id = np.where(nodes==n_end)[0][0]
-        
-    path, edges = nearest_neighbour(node_ids, X, Y, n_start_id, n_end_id)
-
-    print('p')
     
-    path = local_search(path, X, Y, 1000000)
+    path, edges = find_opt_path(node_ids, X, Y, n_start_id, n_end_id, 1000)
     
-    print('g')
-    # path, edges = get_path_mtz(node_ids,
-    #                             X,
-    #                             Y,
-    #                             n_start_id,
-    #                             n_end_id)
-
     path = nodes[path]
 
+    return path
+
+
+def run_cluster_opt(cities, cluster_endpoints, cluster_edges, clusters):
+    print('running!')
+    path = []
+    for cluster in clusters:
+        print(cluster)
+        c_path = opt_cluster(cities, cluster_endpoints, cluster_edges, cluster)
+        path += list(c_path)
     return path
 
