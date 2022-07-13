@@ -121,7 +121,7 @@ def get_node_positions(data):
 
 
 def get_node_primality(data):
-    return data['Prime_city'].values #data.set_index('CityId')['Prime_city'].to_dict()
+    return data['Prime_city'].values
 
 
 def create_submission(path: list, filename: str='submission'):
@@ -131,6 +131,13 @@ def create_submission(path: list, filename: str='submission'):
     submission = pd.DataFrame(path, columns=['Path'])
 
     submission.to_csv(join(dirname(__file__), f"submissions/{filename}.csv"), index=False)
+
+
+def load_submission(filename:str='submission'):
+
+    paths = pd.read_csv(join(dirname(__file__), f"submissions/{filename}.csv"))
+
+    return list(paths['Path'])
 
 
 def save_tour(path: list, edges: list, filename: str='best_tour'):

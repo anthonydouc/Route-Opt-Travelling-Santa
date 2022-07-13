@@ -172,11 +172,11 @@ def get_three_permute_indices(rng, n_nodes: int, n_samples: int):
     permutation. 
     '''
     
-    ri = rng.integers(1, n - 1 - 2 - 2, n_samples)
+    ri = rng.integers(1, n_nodes - 1 - 2 - 2, n_samples)
 
-    rj = rng.integers(ri + 2, n - 1 - 2, n_samples)
+    rj = rng.integers(ri + 2, n_nodes - 1 - 2, n_samples)
         
-    rk = rng.integers(rj + 2, n - 1, n_samples)
+    rk = rng.integers(rj + 2, n_nodes - 1, n_samples)
 
     return ri, rj, rk
 
@@ -271,6 +271,7 @@ def find_opt_path(nodes: list, X:np.array, Y: np.array, start: int,
     edges = get_edges_from_path(path)
 
     return path, edges
+
 
 if __name__ == '__main__':
     n = 100

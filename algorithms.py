@@ -42,9 +42,6 @@ def calc_path_distance_prime(path, pX, pY, isprime):
     return sum(distance)
 
 
-
-
-
 def run_course_opt(cities: pd.DataFrame, centers: pd.DataFrame,
                    niter: int=1000):
 
