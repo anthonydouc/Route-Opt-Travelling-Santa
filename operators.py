@@ -8,15 +8,15 @@ def calc_dist(tour, d):
     return sum(d[tour[i], tour[i+1]] for i in range(0, len(tour) - 1))
 
 
-def get_three_segs_rand(tour: list, niter: int):
+def get_three_segs_rand(tour: list, niter: int, rng):
     
     n = len(tour)
 
-    ri = np.random.randint(1, n - 1 - 2 - 2, niter)
+    ri = rng.integers(1, n - 1 - 2 - 2, niter)
 
-    rj = np.random.randint(ri + 2, n - 1 - 2, niter)
+    rj = rng.integers(ri + 2, n - 1 - 2, niter)
         
-    rk = np.random.randint(rj + 2, n - 1, niter)
+    rk = rng.integers(rj + 2, n - 1, niter)
 
     return list(zip(ri, rj, rk))
 
@@ -178,6 +178,8 @@ def two_opt(tour, d, n_id1, n_id2):
 
  
 def local_search(tour, X, Y, niter: int=5):
+    
+    rng = np.random.default_rng(0)
 
     tour = list(tour)
     
@@ -186,16 +188,16 @@ def local_search(tour, X, Y, niter: int=5):
     d = calc_euclidean_dist(X, Y)
 
     # random numbers for relocate.
-    t_id_arr = np.random.randint(1, n - 2, niter)
+    t_id_arr = rng.integers(1, n - 2, niter)
         
-    r_id_arr = np.random.randint(t_id_arr + 1, n - 1, niter)
-        
+    r_id_arr = rng.integers(t_id_arr + 1, n - 1, niter)
+            
     # random numbers for two_opt
-    n_id1_arr = np.random.randint(1, n - 2 - 2, niter)
+    n_id1_arr = rng.integers(1, n - 2 - 2, niter)
     
-    n_id2_arr = np.random.randint(n_id1_arr + 2, n - 2, niter)
+    n_id2_arr = rng.integers(n_id1_arr + 2, n - 2, niter)
     
-    segs = get_three_segs_rand(tour, niter)
+    segs = get_three_segs_rand(tour, niter, rng)
        
     for i in range(0, niter):
         t_id, r_id = t_id_arr[i], r_id_arr[i]
