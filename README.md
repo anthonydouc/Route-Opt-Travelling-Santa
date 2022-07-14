@@ -1,5 +1,5 @@
 # Route-opt
-This repostiory contains a python package for solving Kaggle's Travelling Santa
+This repository contains a python package for solving Kaggle's Travelling Santa
 problem https://www.kaggle.com/competitions/traveling-santa-2018-prime-paths/overview. 
 The package is created in fufillment of Coles Data Scientist Candidate analytical task. 
 
@@ -11,7 +11,12 @@ All underlying modelling code is stored in the folder `routeopt` (also a python 
 Before using the package, ensure that your python packages match, or are 
 compatible with the version list contained in environment.yaml. You can
 also install a conda environment and use this prior to running any code.
-(`conda env create -f environment.yaml`)
+
+To install:
+`conda env create -f environment.yaml`
+
+To activate:
+`conda activate route-opt`
 
 ### PYTHONPATH environmental variable
 Ensure that the directory `Route-opt` is included (appended or preappended)
