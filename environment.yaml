@@ -1,4 +1,4 @@
-name: coles-ds
+name: route-opt
 channels:
   - conda-forge
 dependencies:

@@ -1,45 +1,14 @@
 # -*- coding: utf-8 -*-
-import math
 import numpy as np
 import pandas as pd
 
 from scipy.spatial import KDTree
 
-from data import calc_euclidean_dist
 from multiprocessing import Pool, cpu_count
 
-from data import get_data, calc_euclidean_dist, create_submission, save_tour
+from .data import get_data, get_node_primality
 
-from route_finding import find_opt_path
-
-
-def calc_path_distance(edges, pX, pY):
-
-    distance = 0
-
-    for i, (n1, n2) in enumerate(edges):
-        x = pX[n2] - pX[n1]
-        y = pY[n2] - pY[n1]
-        distance += math.sqrt(x * x +  y * y)
-        
-    return distance
-
-
-def calc_path_distance_prime(path, pX, pY, isprime):
-
-    distance = []
-
-    for i, n in enumerate(path[:-1]):
-        x = pX[path[i+1]] - pX[n]
-        y = pY[path[i+1]] - pY[n]
-        distance.append(math.sqrt(x * x +  y * y))
-        
-    # # check every 10th edge. If source node is prime, no penalty.
-    penalty = (~isprime[path[10::10]]) * 0.1
-        
-    distance[10::10] *= (1 + penalty)
-
-    return sum(distance)
+from .route_finding import find_opt_path, calc_path_distance_prime
 
 
 def run_course_opt(cities: pd.DataFrame, centers: pd.DataFrame,
@@ -135,10 +104,8 @@ def opt_cluster(cities, cluster_endpoints, cluster_edges, cluster: int, niter: i
 
 
 def run_cluster_opt(cities, cluster_endpoints, cluster_edges, clusters, niter):
-    print('running!')
     path = []
     for cluster in clusters:
-        print(cluster)
         c_path = opt_cluster(cities, cluster_endpoints, cluster_edges, cluster, niter)
         path += list(c_path)
     return path
@@ -164,7 +131,7 @@ def get_mp_clusters(ncores: int, clusters: list) -> list[list]:
     return cluster_jobs
 
 
-def find_tsp_path(ncluster: int=500, niter_bcl: int=500, niter_wcl: int=500):
+def find_tsp_route(ncluster: int=500, niter_bcl: int=500, niter_wcl: int=500):
 
     cities, centers = get_data(used_saved=True, ncluster=ncluster)
 
@@ -188,6 +155,59 @@ def find_tsp_path(ncluster: int=500, niter_bcl: int=500, niter_wcl: int=500):
     path = [j for sub in out for j in sub]
 
     path = path + [0]
+    
+    isprime = get_node_primality(cities)
 
-    return path
+    d = calc_path_distance_prime(np.array(path), cities['X'].values, cities['Y'].values, isprime)
+
+    return path, d
+
+
+# class TSP():
+
+#     def __init__(self, ncluster: int=500):
+
+#         cities, centers = get_data(used_saved=True, ncluster=ncluster)
+
+#         self.cities = cities
+
+#         self.centers = centers
+
+
+#     def calc_path_distance(self, path):
+
+#         X, Y = self.cities['X'].values, self.cities['Y'].values
+
+#         isprime = get_node_primality(self.cities)
+
+#         return calc_path_distance_prime(path, X, Y, isprime)
+
+
+#     def solve(self, niter_bcl: int=500, niter_wcl: int=500):
+
+#         cluster_path, cluster_edges, cluster_endpoints = run_course_opt(self.cities, self.centers, niter=niter_bcl)
+
+#         clusters = list(cluster_path[:-1])
+
+#         ncores = cpu_count()
+
+#         cluster_jobs = get_mp_clusters(ncores, clusters)
+
+#         path = []
+
+#         with Pool(ncores) as p:
+
+#             args = [[self.cities, cluster_endpoints, cluster_edges, clusters, niter_wcl]
+#                     for clusters in cluster_jobs]
+
+#             out = p.starmap(run_cluster_opt, args)
+
+#         path = [j for sub in out for j in sub]
+
+#         path = path + [0]
+
+#         self.solution = {'path': path,
+#                          'distance': self.calc_path_distance(path)}
+
+#         return path
 

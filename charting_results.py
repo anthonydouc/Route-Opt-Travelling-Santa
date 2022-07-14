@@ -1,16 +1,18 @@
 # -*- coding: utf-8 -*-
+import numpy as np
 from bokeh.plotting import figure
 from bokeh.io import show
 from bokeh.layouts import row
 
-from data import get_data, get_node_positions, load_submission
+from routeopt import (get_data, get_node_positions, load_route,
+                      get_node_primality, calc_path_distance_prime)
 
-from algorithms import find_tsp_path, calc_path_distance_prime#, get_edges_from_path
 
 def create_bk_plot(**kwargs):
     fig = figure(**kwargs)
     fig = plot_format(fig)
     return fig
+
 
 def plot_format(p):
 
@@ -25,13 +27,12 @@ def plot_format(p):
 
     return p
 
+
 cities, centers = get_data(used_saved=True, ncluster=500)
 
 pX, pY = get_node_positions(cities)
 
-path = load_submission('test')
-
-# TODO summarise the path length distribution. May need to be seperated 
+path = load_route('route')
 
 f1 = create_bk_plot(output_backend='webgl',
                     height=700, width=1000,
@@ -40,12 +41,7 @@ f1 = create_bk_plot(output_backend='webgl',
 
 
 f1.line(x=pX[path], y=pY[path])
+
 f1.scatter(x=[pX[0]], y=[pY[0]], size=40 , color='#fb8500', marker='star')
 
-#f1.scatter(x=pX, y=pY, size=0.3, color='#0077b6')
-
-
 show(f1)
-
-
-
