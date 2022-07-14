@@ -149,24 +149,8 @@ def get_mp_clusters(ncores: int, clusters: list) -> list[list]:
 
 def find_tsp_route(ncluster: int=500, niter_bcl: int=500, niter_wcl: int=500):
     '''
-    
-
-    Parameters
-    ----------
-    ncluster : int, optional
-        DESCRIPTION. The default is 500.
-    niter_bcl : int, optional
-        DESCRIPTION. The default is 500.
-    niter_wcl : int, optional
-        DESCRIPTION. The default is 500.
-
-    Returns
-    -------
-    path : TYPE
-        DESCRIPTION.
-    d : TYPE
-        DESCRIPTION.
-
+    Determines a solution to Kaggle's Travelling Santa Problem using
+    clustering and local optimisation heuristics.
     '''
 
     cities, centers = get_data(used_saved=True, ncluster=ncluster)
