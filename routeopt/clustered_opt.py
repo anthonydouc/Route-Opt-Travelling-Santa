@@ -9,16 +9,14 @@ import pandas as pd
 from multiprocessing import Pool, cpu_count
 from scipy.spatial import KDTree
 
-
 from .data import get_data, get_node_primality
-
 from .route_finding import find_opt_path, calc_path_distance_prime
 
 
 def run_course_opt(cities: pd.DataFrame, centers: pd.DataFrame,
                    niter: int=1000):
     '''
-    Finds the shortest route between city clusters. 
+    Finds the shortest route between city clusters.
     '''
     nodes = centers.index.values
 
@@ -78,7 +76,7 @@ def get_endpoints(cities: pd.DataFrame, cluster_edges: pd.DataFrame):
 
 def opt_cluster(cities: pd.DataFrame, cluster_endpoints: list,
                 cluster_edges:list , cluster: int, niter: int):
-    ''' 
+    '''
     '''
 
     cities_cl = cities[cities['cluster'] == cluster]
@@ -171,7 +169,7 @@ def find_tsp_route(ncluster: int=500, niter_bcl: int=500, niter_wcl: int=500):
     path = [j for sub in out for j in sub]
 
     path = path + [0]
-    
+
     isprime = get_node_primality(cities)
 
     d = calc_path_distance_prime(np.array(path), cities['X'].values, cities['Y'].values, isprime)

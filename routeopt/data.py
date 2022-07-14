@@ -43,7 +43,7 @@ def get_node_primality(data):
 
 def read_data() -> pd.DataFrame:
     '''
-    Reads raw city location data provided by Kaggle. 
+    Reads raw city location data provided by Kaggle.
     https://www.kaggle.com/competitions/traveling-santa-2018-prime-paths/data.
     '''
 
@@ -53,10 +53,10 @@ def read_data() -> pd.DataFrame:
 
 
 def assign_cluster(cities: pd.DataFrame, ncluster: int=100) -> (pd.DataFrame, pd.DataFrame):
-    ''' 
+    '''
     Assigns cities into groups by KMEANS clustering on the position of each city.
     '''
-    
+
     X, Y = get_node_positions(cities)
 
     clustering = KMeans(n_clusters=ncluster, random_state=0).fit(np.array([X, Y]).T)

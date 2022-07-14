@@ -2,7 +2,7 @@
 from bokeh.plotting import figure
 from bokeh.io import show
 
-from data import get_data, get_node_positions
+from routeopt import get_data, get_node_positions
 
 def plot_format(p):
         

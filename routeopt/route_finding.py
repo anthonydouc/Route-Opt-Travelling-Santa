@@ -5,7 +5,7 @@ Module for heuristic route optimisation algorithms.
 
 import math
 import numpy as np
- 
+
 
 
 def calc_path_distance_prime(path: np.array, pX: np.array, pY: np.array,
@@ -17,18 +17,18 @@ def calc_path_distance_prime(path: np.array, pX: np.array, pY: np.array,
         x = pX[path[i+1]] - pX[n]
         y = pY[path[i+1]] - pY[n]
         distance.append(math.sqrt(x * x +  y * y))
-        
+
     # # check every 10th edge. If source node is prime, no penalty.
     penalty = (~isprime[path[10::10]]) * 0.1
-        
+
     distance[10::10] *= (1 + penalty)
 
     if aggregate:
         return sum(distance)
     else:
         return distance
-    
-    
+
+
 def calc_euclidean_dist(x: np.array, y: np.array) -> np.array:
     ''' Calculates the euclidean distance between
         all combination of points contained in x & y.
@@ -206,7 +206,7 @@ def get_three_permute_indices(rng, n_nodes: int, n_samples: int):
 def nearest_neighbour(nodes: np.array, X: np.array, Y: np.array,
                       start: int=None, end: int=None) -> (list, list):
     '''
-    Finds a tour based on travelling from each city to the next closest city 
+    Finds a tour based on travelling from each city to the next closest city
     at each step. Can optionally specify a start and end node.
     '''
 
@@ -232,7 +232,7 @@ def nearest_neighbour(nodes: np.array, X: np.array, Y: np.array,
             path = np.append(path, end)
         else:
             valid_nodes = nodes[~np.in1d(nodes, np.append(path, end))]
-            
+
             distances_valid = d[node][valid_nodes]
 
             nearest_node = valid_nodes[np.argmin(distances_valid)]
