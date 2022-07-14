@@ -77,6 +77,8 @@ def get_endpoints(cities: pd.DataFrame, cluster_edges: pd.DataFrame):
 def opt_cluster(cities: pd.DataFrame, cluster_endpoints: list,
                 cluster_edges:list , cluster: int, niter: int):
     '''
+    Attempts to find the shortest path connecting all cities within the 
+    specified cluster.
     '''
 
     cities_cl = cities[cities['cluster'] == cluster]
@@ -146,6 +148,26 @@ def get_mp_clusters(ncores: int, clusters: list) -> list[list]:
 
 
 def find_tsp_route(ncluster: int=500, niter_bcl: int=500, niter_wcl: int=500):
+    '''
+    
+
+    Parameters
+    ----------
+    ncluster : int, optional
+        DESCRIPTION. The default is 500.
+    niter_bcl : int, optional
+        DESCRIPTION. The default is 500.
+    niter_wcl : int, optional
+        DESCRIPTION. The default is 500.
+
+    Returns
+    -------
+    path : TYPE
+        DESCRIPTION.
+    d : TYPE
+        DESCRIPTION.
+
+    '''
 
     cities, centers = get_data(used_saved=True, ncluster=ncluster)
 
