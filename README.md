@@ -1,7 +1,6 @@
 # Route-opt
 This repository contains a python package for solving Kaggle's Travelling Santa
 problem https://www.kaggle.com/competitions/traveling-santa-2018-prime-paths/overview. 
-The package is created in fufillment of Coles Data Scientist Candidate analytical task. 
 
 All underlying modelling code is stored in the folder `routeopt` (also a python package).
 
